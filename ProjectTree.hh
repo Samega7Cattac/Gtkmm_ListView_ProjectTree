@@ -57,7 +57,7 @@ public:
 
     //! @brief Add a new server to the project tree
     //!
-    //! Method to add a new server to the project tree and allocate new 
+    //! Method to add a new server to the project tree and allocate new
     //! ServerConnectionPage to the specific.
     //!
     //! @param server_config Server configuration data structure.
@@ -71,20 +71,20 @@ private:
     public:
         ProjectCell();
 
-        ProjectCell(Glib::RefPtr<Gtk::Box> row_box,
+        ProjectCell(Gtk::Box* row_box,
                     std::vector<ProjectCell> childs = {});
-        
+
         ~ProjectCell();
 
-        Glib::RefPtr<Gtk::Box> GetRowBox() const;
+        Gtk::Box* GetRowBox() const;
 
-        void SetRowBox(Glib::RefPtr<Gtk::Box> new_row_box);
+        void SetRowBox(Gtk::Box* new_row_box);
 
         std::vector<ProjectCell> GetChilds() const;
 
     private:
 
-        Glib::RefPtr<Gtk::Box> m_row_box;
+        Gtk::Box* m_row_box;
 
         std::vector<ProjectCell> m_childs;
     };
@@ -97,14 +97,14 @@ private:
     class ProjectModel : public Glib::Object
     {
     public:
-        static Glib::RefPtr<ProjectModel> create(Glib::RefPtr<Gtk::Box> row_box,
+        static Glib::RefPtr<ProjectModel> create(Gtk::Box* row_box,
                                                  Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
                                                  const std::vector<ProjectCell>& childs = {},
                                                  Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store = nullptr);
 
-        Glib::RefPtr<Gtk::Box> GetRowBox() const;
+        Gtk::Box* GetRowBox() const;
 
-        void SetRowBox(Glib::RefPtr<Gtk::Box> new_row_box);
+        void SetRowBox(Gtk::Box* new_row_box);
 
         std::vector<ProjectCell> GetChilds() const;
 
@@ -117,13 +117,13 @@ private:
         void SetChildStore(Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store);
 
     protected:
-        ProjectModel(Glib::RefPtr<Gtk::Box> row_box,
+        ProjectModel(Gtk::Box* row_box,
                      Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
                      const std::vector<ProjectCell>& childs = {},
                      Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store = nullptr);
-    
+
     private:
-        Glib::RefPtr<Gtk::Box> m_row_box;
+        Gtk::Box* m_row_box;
 
         Glib::RefPtr<Gio::ListStore<ProjectModel>> m_parent_store;
 
@@ -171,7 +171,7 @@ private:
     //! @brief Popup menu for action selection.
     //!
     Gtk::PopoverMenu m_actions_popup_menu;
-    
+
     Glib::RefPtr<Gio::ListModel> create_model(
         const Glib::RefPtr<Glib::ObjectBase>& item = {});
 

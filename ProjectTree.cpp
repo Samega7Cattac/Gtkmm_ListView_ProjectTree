@@ -48,7 +48,7 @@ ProjectTree::ProjectTree () :
     // signal handlers for buttons
     m_button_action_selection.signal_clicked().connect(
             sigc::mem_fun(*this, &ProjectTree::on_action_selection_button_clicked));
-    
+
     // Button styling
     m_button_action_selection.set_label("...");
     m_button_action_selection.set_expand(false);
@@ -82,7 +82,7 @@ ProjectTree::~ProjectTree ()
     m_actions_popup_menu.unparent();
 }
 
-ProjectTree::ProjectModel::ProjectModel(Glib::RefPtr<Gtk::Box> row_box,
+ProjectTree::ProjectModel::ProjectModel(Gtk::Box* row_box,
                                         Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
                                         const std::vector<ProjectCell>& childs,
                                         Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store) :
@@ -94,14 +94,14 @@ ProjectTree::ProjectModel::ProjectModel(Glib::RefPtr<Gtk::Box> row_box,
 
 }
 
-Glib::RefPtr<Gtk::Box>
+Gtk::Box*
 ProjectTree::ProjectModel::GetRowBox() const
 {
     return m_row_box;
 }
 
 void
-ProjectTree::ProjectModel::SetRowBox(Glib::RefPtr<Gtk::Box> new_row_box)
+ProjectTree::ProjectModel::SetRowBox(Gtk::Box* new_row_box)
 {
     m_row_box = new_row_box;
 }
@@ -141,7 +141,7 @@ ProjectTree::ProjectCell::ProjectCell()
 
 }
 
-ProjectTree::ProjectCell::ProjectCell(Glib::RefPtr<Gtk::Box> row_box,
+ProjectTree::ProjectCell::ProjectCell(Gtk::Box* row_box,
                                       std::vector<ProjectCell> childs) :
     m_row_box(row_box),
     m_childs(childs)
@@ -152,17 +152,17 @@ ProjectTree::ProjectCell::ProjectCell(Glib::RefPtr<Gtk::Box> row_box,
 
 ProjectTree::ProjectCell::~ProjectCell()
 {
-    
+
 }
 
-Glib::RefPtr<Gtk::Box>
+Gtk::Box*
 ProjectTree::ProjectCell::GetRowBox() const
 {
     return m_row_box;
 }
 
 void
-ProjectTree::ProjectCell::SetRowBox(Glib::RefPtr<Gtk::Box> new_row_box)
+ProjectTree::ProjectCell::SetRowBox(Gtk::Box* new_row_box)
 {
     m_row_box = new_row_box;
 }
@@ -201,7 +201,7 @@ ProjectTree::create_model(const Glib::RefPtr<Glib::ObjectBase>& item)
         {
             return col->GetChildStore();
         }
-        
+
         // Create a new child store
         Glib::RefPtr<Gio::ListStore<ProjectModel>> new_child_store =
             Gio::ListStore<ProjectModel>::create();
@@ -258,11 +258,10 @@ ProjectTree::on_bind_row(const Glib::RefPtr<Gtk::ListItem>& list_item)
         return;
     }
     row_expander->set_list_row(row);
-    
+
     // Set the new box has the TreeExpander child
-    Glib::RefPtr<Gtk::Box> new_box_ref = col->GetRowBox();
-    Gtk::Box* new_box_ptr = new_box_ref.get();
-    row_expander->set_child(*new_box_ptr);
+    auto new_box = col->GetRowBox();
+    row_expander->set_child(*new_box);
 }
 
 void
@@ -274,7 +273,7 @@ ProjectTree::on_action_selection_button_clicked()
 }
 
 Glib::RefPtr<ProjectTree::ProjectModel>
-ProjectTree::ProjectModel::create(Glib::RefPtr<Gtk::Box> row_box,
+ProjectTree::ProjectModel::create(Gtk::Box* row_box,
                                   Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
                                   const std::vector<ProjectCell>& childs,
                                   Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store)
@@ -294,27 +293,27 @@ ProjectTree::AddRow()
     Gtk::Box* new_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL);
     Gtk::Label* new_label = Gtk::make_managed<Gtk::Label>(row_name);
     new_box->append(*new_label);
-    Glib::RefPtr<Gtk::Box> box_ref = Glib::RefPtr<Gtk::Box>(new_box);
 
     // Get parent row item
     Glib::RefPtr<Glib::ObjectBase> raw_item =
         m_selection_model->get_selected_item();
-    Glib::RefPtr<ProjectModel> row_item =
-        std::dynamic_pointer_cast<ProjectModel>(raw_item);
-    
+    Glib::RefPtr<Gtk::TreeListRow> row_item =
+        std::dynamic_pointer_cast<Gtk::TreeListRow>(raw_item);
+
     // If the item is NULL then needs to be added to root
     if (raw_item == nullptr)
     {
         // Create a new object and add it to the root
         Glib::RefPtr<ProjectModel> new_server_row =
-            ProjectModel::create(Glib::RefPtr<Gtk::Box>(new_box), m_root_store, {}, Gio::ListStore<ProjectModel>::create());
+            ProjectModel::create(new_box, m_root_store, {}, Gio::ListStore<ProjectModel>::create());
         m_root_store->append(new_server_row);
     }
     else
     {
         // Create a new cell and append to the row childs
-        ProjectCell new_cell{box_ref};
-        row_item->AppendChild(new_cell);
+        auto row_model = std::dynamic_pointer_cast<ProjectModel>(row_item->get_item());
+        ProjectCell new_cell{new_box};
+        row_model->AppendChild(new_cell);
     }
 }
 
@@ -324,13 +323,14 @@ ProjectTree::RemoveRow()
     // Get row item
     Glib::RefPtr<Glib::ObjectBase> raw_item =
         m_selection_model->get_selected_item();
-    // FIXME: This convertion isn't working
-    Glib::RefPtr<ProjectModel> row_item =
-        std::dynamic_pointer_cast<ProjectModel>(raw_item);
-    
+    Glib::RefPtr<Gtk::TreeListRow> row_item =
+        std::dynamic_pointer_cast<Gtk::TreeListRow>(raw_item);
+    g_assert(row_item); // who'd remove a row that doesn't exist?
+    Glib::RefPtr<ProjectModel> model = std::dynamic_pointer_cast<ProjectModel>(row_item->get_item());
+
     // Remove the selected row
     guint row_position = m_selection_model->get_selected();
-    row_item->GetParentStore()->remove(row_position);
+    model->GetParentStore()->remove(row_position);
 }
 
 void
