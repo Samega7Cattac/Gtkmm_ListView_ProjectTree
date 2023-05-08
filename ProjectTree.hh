@@ -11,39 +11,6 @@
 #include <gtkmm/treelistmodel.h>
 #include <gtkmm/singleselection.h>
 
-
-//! @brief Stores data of a server
-//!
-//! @param name Name of the server.
-//! @param ip IP address of the server.
-//! @param port TCP port of the server.
-//! @param heartbeat Time interval in seconds between heartbeats of the server.
-//! @param timeout Limit time to timeout a server connection.
-//! @param reconnections Number of times a connection will retry in case of error.
-//! @param description String with a user description fo the server.
-//!
-struct ServerConfig
-{
-    std::string name;
-    std::string ip;
-    unsigned int port;
-    unsigned int heartbear;
-    unsigned int timeout;
-    unsigned int reconnections;
-    std::string description;
-};
-
-//! @brief UI project Tree
-//!
-//! ProjectTree references the connection elements and after connecting it will
-//! list the cluster elements.
-//!
-//! The interaction to the cluster resources is primary done by user activation
-//! of ProjectTree rows.
-//!
-//! It is based on Gtk::Treeview with the model being contained internally to
-//! the class.
-//!
 class ProjectTree : public Gtk::Box
 {
 public:
@@ -55,39 +22,7 @@ public:
     //!
     ~ProjectTree ();
 
-    //! @brief Add a new server to the project tree
-    //!
-    //! Method to add a new server to the project tree and allocate new
-    //! ServerConnectionPage to the specific.
-    //!
-    //! @param server_config Server configuration data structure.
-    //!
-    // void AddNewRow(const std::string& row_name);
-
 private:
-
-    class ProjectCell
-    {
-    public:
-        ProjectCell();
-
-        ProjectCell(Gtk::Box* row_box,
-                    std::vector<ProjectCell> childs = {});
-
-        ~ProjectCell();
-
-        Gtk::Box* GetRowBox() const;
-
-        void SetRowBox(Gtk::Box* new_row_box);
-
-        std::vector<ProjectCell> GetChilds() const;
-
-    private:
-
-        Gtk::Box* m_row_box;
-
-        std::vector<ProjectCell> m_childs;
-    };
 
     //! @brief Tree view data model.
     //!
@@ -99,16 +34,13 @@ private:
     public:
         static Glib::RefPtr<ProjectModel> create(Gtk::Box* row_box,
                                                  Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
-                                                 const std::vector<ProjectCell>& childs = {},
                                                  Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store = nullptr);
 
         Gtk::Box* GetRowBox() const;
 
         void SetRowBox(Gtk::Box* new_row_box);
 
-        std::vector<ProjectCell> GetChilds() const;
-
-        void AppendChild(const ProjectCell& child);
+        void AppendChild(const Glib::RefPtr<ProjectModel>& child);
 
         Glib::RefPtr<Gio::ListStore<ProjectModel>> GetParentStore() const;
 
@@ -119,7 +51,6 @@ private:
     protected:
         ProjectModel(Gtk::Box* row_box,
                      Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
-                     const std::vector<ProjectCell>& childs = {},
                      Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store = nullptr);
 
     private:
@@ -127,30 +58,12 @@ private:
 
         Glib::RefPtr<Gio::ListStore<ProjectModel>> m_parent_store;
 
-        std::vector<ProjectCell> m_childs;
-
         Glib::RefPtr<Gio::ListStore<ProjectModel>> m_child_store;
     };
 
     //! @brief Signal handler for click action button
     //!
     void on_action_selection_button_clicked ();
-
-    //! @brief Signal handling for change of project tree selections.
-    //!
-    void on_treeview_selection_change(guint position, guint n_items);
-
-    //! @brief Handler to handle row activation.
-    //!
-    //! Handler method called by activation of the treeview.
-    //! If activation is on the server, and internal resources, etc.
-    //! The column parameter is not used by the method, as so it was added C++-17
-    //! attribute [[maybe_unused]], to not perform compilation warning.
-    //!
-    //! @param path Activated row path
-    //! @param column Activated row column
-    //!
-    void on_treeview_row_activated (guint position);
 
     //! @brief Treeview for project resources object
     //!
