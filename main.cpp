@@ -4,9 +4,6 @@
 // GLIBMM headers
 #include <glibmm/init.h>
 
-// STD headers
-#include <iostream>
-
 // Widgets headers
 #include "MainWindow.hh"
 

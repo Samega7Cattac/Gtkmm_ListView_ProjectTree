@@ -16,11 +16,11 @@ class ProjectTree : public Gtk::Box
 public:
     //! @brief Class constructor
     //!
-    ProjectTree ();
+    ProjectTree();
 
     //! @brief Class destructor
     //!
-    ~ProjectTree ();
+    ~ProjectTree() override;
 
 private:
 
@@ -37,8 +37,6 @@ private:
                                                  Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store = nullptr);
 
         Gtk::Box* GetRowBox() const;
-
-        void SetRowBox(Gtk::Box* new_row_box);
 
         void AppendChild(const Glib::RefPtr<ProjectModel>& child);
 

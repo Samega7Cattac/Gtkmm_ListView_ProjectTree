@@ -10,8 +10,6 @@
 
 // STD headers
 #include <iostream>
-#include <type_traits>
-#include <fstream>
 #include <utility>
 
 ProjectTree::ProjectTree () :
@@ -88,15 +86,15 @@ ProjectTree::ProjectModel::create(Gtk::Box* row_box,
                                   Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store)
 {
     return Glib::make_refptr_for_instance<ProjectModel>(
-        new ProjectModel(row_box, parent_store, child_store));
+        new ProjectModel(row_box, std::move(parent_store), std::move(child_store)));
 }
 
 ProjectTree::ProjectModel::ProjectModel(Gtk::Box* row_box,
                                         Glib::RefPtr<Gio::ListStore<ProjectModel>> parent_store,
                                         Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store) :
     m_row_box(row_box),
-    m_parent_store(parent_store),
-    m_child_store(child_store)
+    m_parent_store(std::move(parent_store)),
+    m_child_store(std::move(child_store))
 {
 
 }
@@ -105,12 +103,6 @@ Gtk::Box*
 ProjectTree::ProjectModel::GetRowBox() const
 {
     return m_row_box;
-}
-
-void
-ProjectTree::ProjectModel::SetRowBox(Gtk::Box* new_row_box)
-{
-    m_row_box = new_row_box;
 }
 
 void
@@ -135,7 +127,7 @@ ProjectTree::ProjectModel::GetChildStore() const
 void
 ProjectTree::ProjectModel::SetChildStore(Glib::RefPtr<Gio::ListStore<ProjectModel>> child_store)
 {
-    m_child_store = child_store;
+    m_child_store = std::move(child_store);
 }
 
 Glib::RefPtr<Gio::ListModel>
@@ -211,7 +203,18 @@ ProjectTree::on_bind_row(const Glib::RefPtr<Gtk::ListItem>& list_item)
 
     // Set the new box has the TreeExpander child
     Gtk::Box* new_box = model->GetRowBox();
-    row_expander->set_child(*new_box);
+    if (row_expander->get_child() != new_box)
+    {
+        // FIXME: THIS IS A WORKAROUND
+        // Gtk requires the construction of the row widget to be done in on_setup_row
+        // so it keeps track of the objects (and to take ownership)
+        // Since the content of the box is unknown that's not possible.
+        // This workaroud manually increases the reference counter +1
+        // that way the box doesn't get destryed and can be reused
+        // See Also: https://discourse.gnome.org/t/gtkmm-crash-on-treeexpander-set-child/15221?u=samega7cattac
+        new_box->reference();
+        row_expander->set_child(*new_box);
+    }
 }
 
 void

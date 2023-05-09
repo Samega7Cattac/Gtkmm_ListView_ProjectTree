@@ -26,7 +26,7 @@ public:
     //!
     //! This class is designed no to be derived
     //!
-    ~MainWindow();
+    ~MainWindow() override = default;
 
 private:
 
